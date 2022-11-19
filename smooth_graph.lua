@@ -8,7 +8,7 @@ local fn = ... or 'all_distribution.txt'
 local d = file(fn):read():trim():split'\n':map(tonumber:nargs(1))
 --]]
 
-local fn, sigmaMax = ...
+local fn, sigmaMax, outfn = ...
 
 local usingstrs
 local d = file(fn):read():trim():split'\n'
@@ -59,11 +59,10 @@ sigmaMax = tonumber(sigmaMax) or 10
 print('sigmaMax', sigmaMax)
 local sigmas = range(0,1,.01):mapi(function(v) return sigmaMax * v end)
 
-gnuplot(table(
+local args = table(
 	{
-		persist=true,
-		savedata='results.txt',
-		savecmds='cmds.txt',
+		--savedata='results.txt',
+		--savecmds='cmds.txt',
 		xlabel='value', 
 		ylabel='count', 
 		cblabel='gaussian sigma', 
@@ -90,4 +89,14 @@ gnuplot(table(
 			palette=true,
 		} 
 	end)
-))
+)
+
+if outfn then
+	local _,ext = io.getfileext(outfn)
+	args.terminal = ext..' size 1600,900'
+	args.output = outfn
+else
+	args.persist = true
+end
+
+gnuplot(args)
