@@ -5,13 +5,13 @@ require 'ext'
 
 --[[ all_distribution.txt already is in terms of the score
 local fn = ... or 'all_distribution.txt'
-local d = file(fn):read():trim():split'\n':map(tonumber:nargs(1))
+local d = path(fn):read():trim():split'\n':map(tonumber:nargs(1))
 --]]
 
 local fn, sigmaMax, outfn = ...
 
 local usingstrs
-local d = file(fn):read():trim():split'\n'
+local d = path(fn):read():trim():split'\n'
 :filter(function(l)
 	return l:sub(1,1) ~= '#'
 end)
