@@ -93,7 +93,7 @@ local args = table(
 
 if outfn then
 	local _,ext = io.getfileext(outfn)
-	args.terminal = ext..' size 1600,900'
+	args.terminal = ext..' size 1600,900 background rgb "white"'
 	args.output = outfn
 else
 	args.persist = true
