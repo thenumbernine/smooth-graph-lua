@@ -1,0 +1,10 @@
+name = "smooth_graph"
+files = {
+	["README.md"] = "smooth_graph/README.md",
+	["smooth_graph.lua"] = "smooth_graph/smooth_graph.lua",
+}
+deps = {
+	"ext",
+	"gnuplot",
+	"matrix",
+}
