@@ -8,7 +8,7 @@ local fn = ... or 'all_distribution.txt'
 local d = path(fn):read():trim():split'\n':map(tonumber:nargs(1))
 --]]
 
-local fn, sigmaMax, outfn = ...
+local fn, sigmaMax, outfn = table.unpack(cmdline)
 
 local usingstrs
 local d = path(fn):read():trim():split'\n'
@@ -69,30 +69,32 @@ local sigmas = range(0,1,.01):mapi(function(v) return sigmaMax * v end)
 
 local args = table(
 	{
-		--savedata='results.txt',
-		--savecmds='cmds.txt',
-		xlabel='value',
-		ylabel='count',
-		cblabel='gaussian sigma',
-		style='data lines',
-		data=
+		--savedata = 'results.txt',
+		--savecmds = 'cmds.txt',
+		xlabel = 'value',
+		ylabel = 'count',
+		cblabel = 'gaussian sigma',
+		style = 'data lines',
+		xdata = cmdline.xdata,
+		timefmt = cmdline.timefmt,
+		data =
 			table{
 				keys,
 			}:append(
 				sigmas:mapi(function(sigma)
 					return gaussian(sigma)
 				end)
-			)
+			),
 --		:append{
 --			range(minx,maxx,(maxx-minx)/100),
 --		}
 	},
 	sigmas:mapi(function(sigma,i)
 		return {
-			using= 1 -- (#sigmas+1)
+			using = 1 -- (#sigmas+1)
 				..':'..(i+1)..':('..sigma..')',
-			title='',
-			palette=true,
+			title = '',
+			palette = true,
 		}
 	end)
 )
