@@ -18,10 +18,10 @@ end)
 :mapi(function(line,rowindex,desttable)
 	local keystr, valuestr = line:split'%s+':unpack()
 	local y = tonumber(keystr)
-	if not y then 
+	if not y then
 		usingstrs = true
 		y = keystr
-		--error("couldn't interpret "..line) 
+		--error("couldn't interpret "..line)
 	else
 		y = math.floor(y)
 	end
@@ -29,30 +29,38 @@ end)
 	desttable[y] = (desttable[y] or 0) + value
 end)
 local keys = d:keys():sort()
-if usingstrs then
-	d = keys:mapi(function(k,_,t)
-		return d[k], #t+1 
-	end)
-	-- TODO in this case, remap the indexes back into the strings?
-end
+d = keys:mapi(function(k,_,t)
+	return d[k], #t+1
+end)
+local nd = #d
 --local minx = d:keys():inf()
 --local maxx = d:keys():sup()
 --d = d:mapi(function(v,k) return v, k-minx+1 end)
 --for i=1,table.maxn(d) do d[i] = d[i] or 0 end
 --print(tolua(d))
 
-local function gaussian(x, sigma) 
-	return matrix.lambda({#x}, function(i) 
-		if sigma==0 then return x[i] end 
-		local sum,ksum=0,0 
-		for j=1,#x do 
-			local y = (i-j)/sigma 
-			local k = math.exp(-y*y) 
-			sum=sum+x[j]*k 
-			ksum=ksum+k 
-		end 
-		return sum/math.max(ksum,1e-7) 
-	end) 
+local threshold = 1e-5
+local function gaussian(sigma)
+	return matrix.lambda({nd}, function(i)
+		if sigma==0 then return d[i] end
+		local invSigmaSq = 1/sigma^2
+		local sum,ksum=0,0
+		for j=i,1,-1 do
+			local y = usingstrs and (i - j) or (keys[i] - keys[j])
+			local k = math.exp(-invSigmaSq * y * y)
+			if k < threshold then break end
+			sum = sum + d[j] * k
+			ksum = ksum + k
+		end
+		for j=i+1,nd do
+			local y = usingstrs and (i - j) or (keys[i] - keys[j])
+			local k = math.exp(-invSigmaSq * y * y)
+			if k < threshold then break end
+			sum = sum + d[j] * k
+			ksum = ksum + k
+		end
+		return sum/math.max(ksum,1e-7)
+	end)
 end
 
 sigmaMax = tonumber(sigmaMax) or 10
@@ -63,31 +71,29 @@ local args = table(
 	{
 		--savedata='results.txt',
 		--savecmds='cmds.txt',
-		xlabel='value', 
-		ylabel='count', 
-		cblabel='gaussian sigma', 
-		style='data lines', 
+		xlabel='value',
+		ylabel='count',
+		cblabel='gaussian sigma',
+		style='data lines',
 		data=
 			table{
-				range(#d):mapi(function(i)
-					return usingstrs and keys[i] or i
-				end),
+				keys[i],
 			}:append(
-				sigmas:mapi(function(sigma) 
-					return gaussian(d, sigma) 
+				sigmas:mapi(function(sigma)
+					return gaussian(sigma)
 				end)
 			)
 --		:append{
 --			range(minx,maxx,(maxx-minx)/100),
 --		}
-	}, 
-	sigmas:mapi(function(sigma,i) 
+	},
+	sigmas:mapi(function(sigma,i)
 		return {
 			using= 0 -- (#sigmas+1)
 				..':'..(i+1)..':('..sigma..')',
 			title='',
 			palette=true,
-		} 
+		}
 	end)
 )
 
