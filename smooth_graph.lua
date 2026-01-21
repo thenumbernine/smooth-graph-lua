@@ -77,7 +77,7 @@ local args = table(
 		style='data lines',
 		data=
 			table{
-				keys[i],
+				keys,
 			}:append(
 				sigmas:mapi(function(sigma)
 					return gaussian(sigma)
@@ -89,7 +89,7 @@ local args = table(
 	},
 	sigmas:mapi(function(sigma,i)
 		return {
-			using= 0 -- (#sigmas+1)
+			using= 1 -- (#sigmas+1)
 				..':'..(i+1)..':('..sigma..')',
 			title='',
 			palette=true,
