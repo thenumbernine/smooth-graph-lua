@@ -75,8 +75,10 @@ local args = table(
 		ylabel = 'count',
 		cblabel = 'gaussian sigma',
 		style = 'data lines',
+		xtics = cmdline.xtics,
 		xdata = cmdline.xdata,
 		timefmt = cmdline.timefmt,
+		format = cmdline.format,
 		data =
 			table{
 				keys,
@@ -91,7 +93,7 @@ local args = table(
 	},
 	sigmas:mapi(function(sigma,i)
 		return {
-			using = 1 -- (#sigmas+1)
+			using = (cmdline.dontusekeys and 0 or 1) -- (#sigmas+1)
 				..':'..(i+1)..':('..sigma..')',
 			title = '',
 			palette = true,
