@@ -11,28 +11,32 @@ local d = path(fn):read():trim():split'\n':map(tonumber:nargs(1))
 local fn, sigmaMax, outfn = table.unpack(cmdline)
 
 local usingstrs
-local d = path(fn):read():trim():split'\n'
-:filter(function(l)
-	return l:sub(1,1) ~= '#'
-end)
-:mapi(function(line,rowindex,desttable)
+local xs = table()
+local ys = table()
+path(fn):read():trim():split'\n'
+:mapi(function(origline,rowindex)
+	local line = (origline:match'^([^#]*)' or ''):trim()
+	if #line == 0 then return end
 	local keystr, valuestr = line:split'%s+':unpack()
-	local y = tonumber(keystr)
-	if not y then
+	local x = tonumber(keystr)
+	if not x then
 		usingstrs = true
-		y = keystr
+		x = keystr
 		--error("couldn't interpret "..line)
 	else
-		y = math.floor(y)
+		x = math.floor(x)
 	end
-	local value = valuestr and assert(tonumber(valuestr)) or 1
-	desttable[y] = (desttable[y] or 0) + value
+	local value
+	if valuestr then
+		value = tonumber(valuestr)
+			or error("failed to parse value from row "..rowindex.." line "..origline)
+	else
+		value = 1
+	end
+	xs:insert(x)
+	ys:insert(value)
 end)
-local keys = d:keys():sort()
-d = keys:mapi(function(k,_,t)
-	return d[k], #t+1
-end)
-local nd = #d
+local n = #xs
 --local minx = d:keys():inf()
 --local maxx = d:keys():sup()
 --d = d:mapi(function(v,k) return v, k-minx+1 end)
@@ -41,22 +45,28 @@ local nd = #d
 
 local threshold = 1e-5
 local function gaussian(sigma)
-	return matrix.lambda({nd}, function(i)
-		if sigma==0 then return d[i] end
+	return matrix.lambda({n}, function(i)
+		if sigma==0 then
+			local y = ys[i]
+			if not y then
+				error("row "..i.." value is nil")
+			end
+			return y
+		end
 		local invSigmaSq = 1/sigma^2
 		local sum,ksum=0,0
 		for j=i,1,-1 do
-			local y = usingstrs and (i - j) or (keys[i] - keys[j])
-			local k = math.exp(-invSigmaSq * y * y)
+			local dx = usingstrs and (i - j) or (xs[i] - xs[j])
+			local k = math.exp(-invSigmaSq * dx * dx)
 			if k < threshold then break end
-			sum = sum + d[j] * k
+			sum = sum + ys[j] * k
 			ksum = ksum + k
 		end
-		for j=i+1,nd do
-			local y = usingstrs and (i - j) or (keys[i] - keys[j])
-			local k = math.exp(-invSigmaSq * y * y)
+		for j=i+1,n do
+			local dx = usingstrs and (i - j) or (xs[i] - xs[j])
+			local k = math.exp(-invSigmaSq * dx * dx)
 			if k < threshold then break end
-			sum = sum + d[j] * k
+			sum = sum + ys[j] * k
 			ksum = ksum + k
 		end
 		return sum/math.max(ksum,1e-7)
@@ -81,10 +91,10 @@ local args = table(
 		format = cmdline.format,
 		data =
 			table{
-				keys,
+				xs,
 			}:append(
 				sigmas:mapi(function(sigma)
-					return gaussian(sigma)
+					return (gaussian(sigma))
 				end)
 			),
 --		:append{
