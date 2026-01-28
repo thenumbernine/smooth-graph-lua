@@ -1,7 +1,12 @@
+--------------------------------------------
+-- generated with dist/build-distinfo.rua --
+--------------------------------------------
+
 name = "smooth_graph"
 files = {
-	["README.md"] = "smooth_graph/README.md",
-	["smooth_graph.lua"] = "smooth_graph/smooth_graph.lua",
+	"README.md",
+	"distinfo",
+	"smooth_graph.lua",
 }
 deps = {
 	"ext",
